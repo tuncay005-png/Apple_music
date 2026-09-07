@@ -167,7 +167,16 @@ class MusicDownloader:
                         track.download(str(output_file), codec='aac', bitrate_in_kbps=320)
                     except:
                         # Əgər 320kbps yoxdursa, mövcud ən yüksək keyfiyyət
-                        track.download(str(output_file), codec='aac')
+                        try:
+                            track.download(str(output_file), codec='aac')
+                        except Exception as dl_error:
+                            logger.error(f"✗ Yükləmə xətası: {dl_error}")
+                            continue
+                    
+                    # Faylın yarandığını yoxla
+                    if not output_file.exists():
+                        logger.error(f"✗ Fayl yaradılmadı: {output_file.name}")
+                        continue
                     
                     # Qapaq şəklini əldə et (1000x1000)
                     if track.cover_uri:
@@ -247,14 +256,27 @@ class MusicDownloader:
                     
                     try:
                         video_url = f"https://www.youtube.com/watch?v={video_id}"
-                        logger.info(f"⬇ Yüklənir: {entry.get('title', 'Unknown')}")
+                        title = entry.get('title', 'Unknown')
+                        logger.info(f"⬇ Yüklənir: {title}")
                         
-                        ydl.download([video_url])
+                        # Yükləmədən əvvəl downloads qovluğundakı faylların sayı
+                        files_before = set(DOWNLOAD_DIR.glob('*.m4a'))
                         
-                        # Tarixçəyə əlavə et
-                        self._save_to_history(track_id)
-                        downloaded_count += 1
-                        logger.info(f"✓ Uğurla yükləndi")
+                        # Yüklə
+                        result = ydl.download([video_url])
+                        
+                        # Yükləmədən sonra yeni faylları yoxla
+                        files_after = set(DOWNLOAD_DIR.glob('*.m4a'))
+                        new_files = files_after - files_before
+                        
+                        # Əgər yeni fayl yaranıbsa, uğurlu sayılır
+                        if result == 0 and len(new_files) > 0:
+                            # Tarixçəyə əlavə et
+                            self._save_to_history(track_id)
+                            downloaded_count += 1
+                            logger.info(f"✓ Uğurla yükləndi: {list(new_files)[0].name}")
+                        else:
+                            logger.error(f"✗ Fayl yaradılmadı: {title}")
                         
                     except Exception as e:
                         logger.error(f"✗ Xəta ({entry.get('title', 'Unknown')}): {e}")
