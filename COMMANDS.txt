@@ -1,0 +1,113 @@
+=================================================================
+KOPYALA-YAPISHDIR KOMANDALAR
+=================================================================
+
+PowerShell aci ve bu komandlari ARDICIL icra edin:
+
+
+--- ADDIM 1: Qovluga kecin ---
+
+cd c:\Users\Tuncay\Desktop\Apple_music
+
+
+--- ADDIM 2: Python kitabxanalarini qurasdir (2-3 deqiqe) ---
+
+pip install -r requirements.txt
+
+
+--- ADDIM 3: FFmpeg qurasdir ---
+
+winget install ffmpeg
+
+
+--- ADDIM 4: Konfiqurasiyan test et ---
+
+python test_config.py
+
+
+--- ADDIM 5: Lokal test (isteye bagli) ---
+
+python main.py
+
+
+--- ADDIM 6: GitHub-a push et ---
+
+git init
+git remote add origin https://github.com/tuncay005-png/Apple_music.git
+git add .
+git commit -m "Initial setup"
+git branch -M main
+git push -u origin main
+
+
+--- EGER autentifikasiya sorusarsa ---
+
+winget install GitHub.cli
+gh auth login
+git push -u origin main
+
+
+--- ADDIM 7: Rclone qurasdir ---
+
+winget install Rclone.Rclone
+
+
+--- ADDIM 8: Rclone konfiqurasiya et ---
+
+rclone config
+
+(Telimatlar: n -> googledrive -> drive -> Enter Enter -> 1 -> Enter -> y -> Allow -> n -> y -> q)
+
+
+--- ADDIM 9: Google Drive qovluq yarat ---
+
+rclone mkdir googledrive:/Apple_Music
+
+
+--- ADDIM 10: Base64 string yarat ---
+
+$configPath = "$env:USERPROFILE\.config\rclone\rclone.conf"
+if (-not (Test-Path $configPath)) { $configPath = "$env:APPDATA\rclone\rclone.conf" }
+$base64 = [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($configPath))
+$base64 | Set-Clipboard
+Write-Host "OK - Clipboard-a kopyalandi!"
+
+
+--- ADDIM 11: GitHub Secrets elave et ---
+
+Link: https://github.com/tuncay005-png/Apple_music/settings/secrets/actions
+
+SECRET 1:
+Name: YANDEX_TOKEN
+Secret: y0__wgBENiDg8cHGIqPSSD86ff5GDDLm_ifCJZV9IbpHhSps_glxbeGg9EVMtzc
+
+SECRET 2:
+Name: YANDEX_PLAYLIST_ID
+Secret: ed505ebb-11bf-3df9-9440-0a6c960cdf83
+
+SECRET 3:
+Name: YOUTUBE_PLAYLIST_ID
+Secret: PLT4QS2kxaqBc
+
+SECRET 4:
+Name: RCLONE_CONFIG_CONTENT
+Secret: (Ctrl+V - clipboard-dan)
+
+SECRET 5:
+Name: RCLONE_REMOTE_NAME
+Secret: googledrive
+
+SECRET 6:
+Name: RCLONE_REMOTE_PATH
+Secret: /Apple_Music
+
+
+--- ADDIM 12: Ilk workflow-u ise sal ---
+
+Link: https://github.com/tuncay005-png/Apple_music/actions
+"Run workflow" duymesine bas
+
+
+=================================================================
+HAZIR! Mahnılar Google Drive -> Apple_Music qovlugunda olacaq
+=================================================================

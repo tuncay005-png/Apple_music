@@ -1,0 +1,157 @@
+name: Avtomatik Musiqi Yükləmə
+
+on:
+  # Hər gün gecə saat 00:00-da (UTC) işə düş
+  schedule:
+    - cron: '0 0 * * *'  # Gecə saat 12 (UTC) - Sizin yerli saatınıza görə düzəldin
+  
+  # Manual başlatma imkanı (Actions səhifəsindən)
+  workflow_dispatch:
+  
+  # Push olduqda test üçün (istəyə bağlı)
+  # push:
+  #   branches: [ main ]
+
+jobs:
+  download-music:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Repository-ni checkout et
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: 🐍 Python quraşdır
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: 📦 Kitabxanaları quraşdır
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: 🎬 FFmpeg quraşdır
+      uses: FedericoCarboni/setup-ffmpeg@v3
+      with:
+        ffmpeg-version: release
+        architecture: x64
+    
+    - name: 📋 History faylını yüklə (əvvəlki yükləmələr)
+      continue-on-error: true
+      run: |
+        if [ -f "history.txt" ]; then
+          echo "✓ history.txt mövcuddur"
+        else
+          echo "ℹ history.txt yoxdur, yeni yaradılacaq"
+          touch history.txt
+        fi
+    
+    - name: 🎵 Mahnıları yüklə
+      env:
+        YANDEX_TOKEN: ${{ secrets.YANDEX_TOKEN }}
+        YANDEX_PLAYLIST_ID: ${{ secrets.YANDEX_PLAYLIST_ID }}
+        YOUTUBE_PLAYLIST_ID: ${{ secrets.YOUTUBE_PLAYLIST_ID }}
+      run: |
+        echo "🎵 Musiqi yükləmə prosesi başlayır..."
+        python main.py
+        echo "✓ Yükləmə tamamlandı"
+    
+    - name: 📊 Yüklənən faylları göstər
+      run: |
+        echo "📁 Yüklənən fayllar:"
+        ls -lh downloads/ || echo "Heç bir fayl yüklənmədi"
+        echo ""
+        echo "📝 Ümumi ölçü:"
+        du -sh downloads/ || echo "0 KB"
+    
+    - name: ☁️ Rclone quraşdır
+      run: |
+        curl https://rclone.org/install.sh | sudo bash
+        rclone version
+    
+    - name: 🔑 Rclone konfiqurasiyasını hazırla
+      env:
+        RCLONE_CONFIG_CONTENT: ${{ secrets.RCLONE_CONFIG_CONTENT }}
+      run: |
+        mkdir -p ~/.config/rclone
+        echo "$RCLONE_CONFIG_CONTENT" | base64 -d > ~/.config/rclone/rclone.conf
+        echo "✓ Rclone konfiqurasiyası hazırdır"
+    
+    - name: ☁️ Google Drive-a yüklə
+      env:
+        RCLONE_REMOTE_NAME: ${{ secrets.RCLONE_REMOTE_NAME || 'googledrive' }}
+        RCLONE_REMOTE_PATH: ${{ secrets.RCLONE_REMOTE_PATH || '/Apple_Music' }}
+      run: |
+        # Əgər yüklənən fayl varsa
+        if [ "$(ls -A downloads/)" ]; then
+          echo "☁️ Google Drive-a yükləmə başlayır..."
+          rclone copy downloads/ ${RCLONE_REMOTE_NAME}:${RCLONE_REMOTE_PATH} \
+            --progress \
+            --transfers 4 \
+            --checkers 8 \
+            --contimeout 60s \
+            --timeout 300s \
+            --retries 3 \
+            --low-level-retries 10 \
+            --stats 1s
+          
+          echo "✓ Bütün fayllar Google Drive-a yükləndi"
+          
+          # Yüklənən fayl sayını hesabla
+          FILE_COUNT=$(ls -1 downloads/ | wc -l)
+          echo "📊 Yüklənən fayl sayı: $FILE_COUNT"
+        else
+          echo "ℹ Yükləmək üçün yeni fayl yoxdur"
+        fi
+    
+    - name: 💾 History faylını yenilə (Artifacts)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: history-${{ github.run_number }}
+        path: history.txt
+        retention-days: 90
+    
+    - name: 💾 History faylını repository-yə commit et
+      if: always()
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        
+        if [ -f "history.txt" ]; then
+          git add history.txt
+          
+          if git diff --staged --quiet; then
+            echo "ℹ History faylında dəyişiklik yoxdur"
+          else
+            git commit -m "🤖 History yeniləndi: $(date +'%Y-%m-%d %H:%M:%S')"
+            git push
+            echo "✓ History faylı repository-yə əlavə edildi"
+          fi
+        fi
+    
+    - name: 🧹 Logs və downloads fayllarını artifacts-ə yüklə
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: logs-and-downloads-${{ github.run_number }}
+        path: |
+          music_downloader.log
+          downloads/
+        retention-days: 7
+    
+    - name: 📧 Uğurlu bildiriş (Email - istəyə bağlı)
+      if: success()
+      run: |
+        echo "✅ Musiqi yükləmə və Google Drive-a yükləmə uğurla tamamlandı!"
+        echo "📅 Tarix: $(date)"
+        echo "🔗 Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+    
+    - name: ❌ Xəta bildirişi
+      if: failure()
+      run: |
+        echo "⚠️ Xəta baş verdi! Logları yoxlayın."
+        echo "🔗 Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
