@@ -233,6 +233,11 @@ class MusicDownloader:
             'ignoreerrors': True,
             'writethumbnail': False,
             'embedthumbnail': False,
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
             'extractor_args': {
                 'youtube': {
                     'player_client': ['android_creator'],
