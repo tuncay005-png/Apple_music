@@ -110,6 +110,11 @@ class MusicDownloader:
         M4A faylına qapaq şəklini Apple Music formatında embed et
         """
         try:
+            # Yalnız M4A faylları üçün
+            if file_path.suffix.lower() not in ['.m4a', '.mp4']:
+                logger.debug(f"⊘ Qapaq yalnız M4A üçün: {file_path.name}")
+                return
+            
             audio = MP4(str(file_path))
             
             # Şəkli optimallaşdır
@@ -120,7 +125,7 @@ class MusicDownloader:
             audio.save()
             logger.info(f"✓ Qapaq şəkli embed edildi: {file_path.name}")
         except Exception as e:
-            logger.error(f"✗ Qapaq embed xətası ({file_path.name}): {e}")
+            logger.warning(f"⊘ Qapaq embed xətası ({file_path.name}): {e}")
     
     def download_from_yandex(self) -> int:
         """
@@ -164,26 +169,22 @@ class MusicDownloader:
                     
                     logger.info(f"⬇ Yüklənir: {artists} - {title}")
                     
-                    # Yükləməni cəhd et (bitrate parametrsiz)
+                    # Yükləməni cəhd et - M4A format, 256kbps AAC
                     download_success = False
                     
                     try:
-                        # İlk cəhd: sadəcə codec ilə (bitrate yox)
-                        track.download(str(output_file), codec='aac')
+                        # M4A/AAC formatında yüklə (256kbps)
+                        track.download(str(output_file), codec='aac', bitrate_in_kbps=256)
                         download_success = output_file.exists() and output_file.stat().st_size > 0
+                        logger.info(f"✓ M4A 256kbps formatında yükləndi")
                     except Exception as e1:
-                        logger.warning(f"AAC yükləmə xətası: {e1}")
+                        logger.warning(f"M4A 256kbps xətası: {e1}")
                         
                         try:
-                            # İkinci cəhd: mp3 formatı (AAC işləməzsə)
-                            output_file_mp3 = output_file.with_suffix('.mp3')
-                            track.download(str(output_file_mp3), codec='mp3')
-                            
-                            if output_file_mp3.exists() and output_file_mp3.stat().st_size > 0:
-                                # MP3-ü saxla (M4A-ya çevirməyə ehtiyac yox)
-                                logger.info(f"✓ MP3 formatında yükləndi")
-                                output_file = output_file_mp3
-                                download_success = True
+                            # Əgər 256 yoxdursa, mövcud AAC
+                            track.download(str(output_file), codec='aac')
+                            download_success = output_file.exists() and output_file.stat().st_size > 0
+                            logger.info(f"✓ M4A formatında yükləndi")
                         except Exception as e2:
                             logger.error(f"✗ Yükləmə xətası: {e2}")
                     
@@ -252,7 +253,7 @@ class MusicDownloader:
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
-                'preferredquality': '192',
+                'preferredquality': '5',  # YouTube orijinal keyfiyyət (128-256kbps)
             }],
         }
         
