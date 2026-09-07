@@ -37,7 +37,7 @@ rclone.conf
 GITHUB_SECRETS_VALUES.txt
 
 # Tarixçə
-history.txt
+# history.txt  # Temporarily allow to reset
 
 # IDE
 .vscode/
