@@ -44,8 +44,10 @@ load_dotenv()
 YANDEX_TOKEN = os.getenv('YANDEX_TOKEN')
 YANDEX_PLAYLIST_ID = os.getenv('YANDEX_PLAYLIST_ID')
 YOUTUBE_PLAYLIST_ID = os.getenv('YOUTUBE_PLAYLIST_ID')
+YOUTUBE_COOKIES = os.getenv('YOUTUBE_COOKIES')  # Cookies məzmunu
 DOWNLOAD_DIR = Path('downloads')
 HISTORY_FILE = Path('history.txt')
+COOKIES_FILE = Path('youtube_cookies.txt')  # Müvəqqəti cookies faylı
 
 # Qovluğu yarat
 DOWNLOAD_DIR.mkdir(exist_ok=True)
@@ -215,13 +217,21 @@ class MusicDownloader:
     def download_from_youtube(self) -> int:
         """
         YouTube pleylistindən yeni mahnıları yüklə
-        Format: Xam M4A (AAC), QAPaq şəkli OLMADAN
+        Format: MP3 (FFmpeg ilə çevrilmiş)
         """
         if not YOUTUBE_PLAYLIST_ID:
             logger.warning("YOUTUBE_PLAYLIST_ID təyin edilməyib")
             return 0
         
         downloaded_count = 0
+        
+        # Cookies faylını yarat (əgər YOUTUBE_COOKIES secret varsa)
+        if YOUTUBE_COOKIES:
+            try:
+                COOKIES_FILE.write_text(YOUTUBE_COOKIES, encoding='utf-8')
+                logger.info("✓ YouTube cookies yükləndi")
+            except Exception as e:
+                logger.warning(f"Cookies yazma xətası: {e}")
         
         # yt-dlp konfiqurasiyası
         ydl_opts = {
@@ -248,6 +258,11 @@ class MusicDownloader:
                 'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 13) gzip'
             }
         }
+        
+        # Cookies faylı varsa əlavə et
+        if COOKIES_FILE.exists():
+            ydl_opts['cookiefile'] = str(COOKIES_FILE)
+            logger.info("✓ Cookies istifadə edilir")
         
         try:
             playlist_url = f"https://www.youtube.com/playlist?list={YOUTUBE_PLAYLIST_ID}"

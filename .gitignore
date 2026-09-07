@@ -35,6 +35,7 @@ config.json
 token.json
 rclone.conf
 GITHUB_SECRETS_VALUES.txt
+youtube_cookies.txt
 
 # Tarixçə
 # history.txt  # Temporarily allow to reset
