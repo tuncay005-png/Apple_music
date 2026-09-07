@@ -1,0 +1,86 @@
+=================================================================
+🔑 YANDEX MUSIC TOKEN ALMAQ - ASAN USUL
+=================================================================
+
+Console işləmirsə, bu üsulu istifadə edin:
+
+
+--- ADDIM 1: PowerShell açın ---
+
+Windows düyməsi + X
+"Windows PowerShell" seçin
+
+
+--- ADDIM 2: Qovluğa keçin ---
+
+cd c:\Users\Tuncay\Desktop\Apple_music
+
+
+--- ADDIM 3: Token alıcı skripti işə salın ---
+
+python get_token.py
+
+
+--- ADDIM 4: Məlumatları daxil edin ---
+
+Username: (Yandex email və ya telefon nömrəniz)
+Password: (Yandex şifrəniz)
+
+
+--- NƏTİCƏ ---
+
+Skript:
+✅ Token yaradacaq
+✅ Token-ı test edəcək
+✅ .env faylını avtomatik yeniləyəcək
+
+
+=================================================================
+ALTERNATİV ÜSUL: Brauzerdə (əgər Console işləyirsə)
+=================================================================
+
+1. https://music.yandex.ru/ açın
+
+2. F12 basın
+
+3. Console tabına keçin
+
+4. Bu kodu KOPYALAYIN və Console-a YAPIŞDIRIN:
+   (Əl ilə yazmayın, kopyalayın!)
+
+localStorage.getItem('access_token')
+
+5. Enter basın
+
+6. Token göstərəcək - kopyalayın
+
+
+=================================================================
+PROBLEM OLARSA
+=================================================================
+
+Əgər get_token.py xəta versə:
+
+1. Username düzgündürmü yoxlayın:
+   - Email: example@mail.ru
+   - Və ya telefon: +994501234567
+
+2. Password düzgündürmü yoxlayın
+
+3. İnternet bağlantısı varmi yoxlayın
+
+4. Yandex hesabınız aktiv olmalıdır
+
+
+=================================================================
+HAZIR OLDUQDAN SONRA
+=================================================================
+
+Token əldə etdikdən sonra:
+
+python test_config.py
+
+Əgər ✅ görürsüzsə - hər şey hazırdır!
+
+
+=================================================================

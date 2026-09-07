@@ -64,7 +64,8 @@ class MusicDownloader:
                 self.yandex_client = Client(YANDEX_TOKEN).init()
                 logger.info("✓ Yandex Music müştərisi uğurla başladıldı")
             except Exception as e:
-                logger.error(f"✗ Yandex Music müştərisi başladıla bilmədi: {e}")
+                logger.warning(f"⚠ Yandex Music token işləmir - skip ediləcək: {e}")
+                logger.info("💡 Yalnız YouTube istifadə ediləcək")
     
     def _load_history(self) -> Set[str]:
         """Yüklənmiş mahnıların tarixçəsini yüklə"""

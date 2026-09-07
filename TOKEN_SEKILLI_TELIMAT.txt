@@ -1,0 +1,185 @@
+=================================================================
+🔑 YANDEX MUSIC TOKEN - ŞƏKILLI ADDIM-ADDIM TƏLİMAT
+=================================================================
+
+⚠️ Console işləmirsə bu üsulu istifadə edin!
+
+
+═══════════════════════════════════════════════════════════════
+ÜSUL 1: COOKIES ÜSULU (Ən asan və etibarlı!)
+═══════════════════════════════════════════════════════════════
+
+ADDIM 1: Yandex Music açın
+---------------------------
+Brauzerdə bu linki açın:
+https://music.yandex.ru/
+
+Hesabınıza giriş edin (əgər girməmisinizsə)
+
+
+ADDIM 2: Developer Tools açın
+------------------------------
+F12 düyməsini basın
+(və ya sağ klik → Inspect)
+
+
+ADDIM 3: Application tabına keçin
+----------------------------------
+Chrome/Edge: Yuxarıda "Application" tabı
+Firefox:     Yuxarıda "Storage" tabı
+
+⚠️ Əgər "Application" tab görünmürsə:
+   - Yuxarıda ">>" düyməsinə klikləyin
+   - Dropdown-dan "Application" seçin
+
+
+ADDIM 4: Cookies açın
+---------------------
+Sol tərəfdə menüdə:
+→ Storage
+  → Cookies
+    → https://music.yandex.ru
+
+Klik edin!
+
+
+ADDIM 5: Token-ı tapın
+-----------------------
+Sağ tərəfdə cookies siyahısı görəcəksiniz.
+
+Bu adlardan BİRİNİ tapın (hansı varsa):
+  ⭐ access_token
+  ⭐ OAuth
+  ⭐ yandex_login
+  ⭐ Session_id
+
+Cookie-nin ADINA klikləyin.
+
+
+ADDIM 6: Value-nu kopyalayın
+-----------------------------
+Aşağıda "Value" sahəsi görünəcək.
+
+Value-nun İÇİNDƏ uzun bir string olacaq:
+  Məsələn: y0_AgAAAAABCDE...xyz123
+
+Bu string-i:
+1. Siçanla seçin (triple-click)
+2. Ctrl+C basın (kopyalayın)
+
+
+ADDIM 7: Token-ı test edin
+---------------------------
+PowerShell-də:
+
+cd c:\Users\Tuncay\Desktop\Apple_music
+python get_token_v2.py
+
+Token soruşanda Ctrl+V basın (yapışdırın)
+
+
+═══════════════════════════════════════════════════════════════
+ÜSUL 2: NETWORK ÜSULU (Əgər cookies tapılmırsa)
+═══════════════════════════════════════════════════════════════
+
+ADDIM 1: Network tabına keçin
+------------------------------
+F12 → "Network" tab
+
+
+ADDIM 2: Səhifəni yeniləyin
+---------------------------
+Ctrl+R basın (səhifə yenilənəcək)
+
+
+ADDIM 3: Request tapın
+----------------------
+Network siyahısında bu adlardan BİRİNİ tapın:
+  - account
+  - status
+  - init
+  - feed
+
+Klik edin!
+
+
+ADDIM 4: Headers baxın
+----------------------
+Sağ tərəfdə "Headers" tabına keçin
+
+Aşağı scroll edin və tapın:
+  Authorization: OAuth TOKEN_BURADADIR
+
+və ya:
+  Cookie: access_token=TOKEN_BURADADIR
+
+
+ADDIM 5: Token-ı kopyalayın
+---------------------------
+"OAuth" və ya "access_token=" sözündən SONRAKI hissəni kopyalayın.
+
+
+ADDIM 6: Token-ı test edin
+---------------------------
+python get_token_v2.py
+
+
+═══════════════════════════════════════════════════════════════
+ÜSUL 3: CONSOLE ÜSULU (Sadə kopyala-yapışdır)
+═══════════════════════════════════════════════════════════════
+
+Əgər Console işləyirsə (error vermirsə):
+
+ADDIM 1: F12 → Console tab
+
+ADDIM 2: Bu mətni KOPYALAYIN (Ctrl+C):
+
+localStorage.getItem('access_token')
+
+ADDIM 3: Console-a YAPIŞDIRIN (Ctrl+V)
+
+ADDIM 4: Enter basın
+
+ADDIM 5: Çıxan token-ı kopyalayın
+
+⚠️ Əgər "null" çıxarsa:
+   localStorage.getItem('yandex_login')
+   cəhd edin.
+
+
+═══════════════════════════════════════════════════════════════
+TOKEN ƏLDƏ ETDİKDƏN SONRA
+═══════════════════════════════════════════════════════════════
+
+PowerShell-də:
+
+cd c:\Users\Tuncay\Desktop\Apple_music
+python get_token_v2.py
+
+Token-ı yapışdırın və Enter basın.
+
+Skript:
+✅ Token-ı test edəcək
+✅ .env faylını avtomatik yeniləyəcək
+✅ Konfiqurasiyanı yoxlayacaq
+
+
+═══════════════════════════════════════════════════════════════
+PROBLEM OLARSA
+═══════════════════════════════════════════════════════════════
+
+1. Token tapılmırsa:
+   → Yandex Music-ə yenidən giriş edin
+   → Səhifəni yeniləyin (Ctrl+R)
+   → Yenidən cookies yoxlayın
+
+2. "null" göstərirsə:
+   → Session_id cookie-ni sınayın
+   → Network üsulunu istifadə edin
+
+3. Hələ də işləmirsə:
+   → Screenshot göndərin
+   → Hansı cookies gördüyünüzü yazın
+
+
+═══════════════════════════════════════════════════════════════

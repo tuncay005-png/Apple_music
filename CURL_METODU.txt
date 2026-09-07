@@ -1,0 +1,144 @@
+=================================================================
+📋 cURL METODU - ŞƏKILLI TƏLİMAT
+=================================================================
+
+Bu üsul brauzerdən network request-i kopyalayır.
+
+
+═══════════════════════════════════════════════════════════════
+ADDIM 1: Yandex Music açın
+═══════════════════════════════════════════════════════════════
+
+Brauzerdə:
+https://music.yandex.ru/
+
+Hesabınıza giriş edin (əgər girməmisinizsə)
+
+
+═══════════════════════════════════════════════════════════════
+ADDIM 2: Developer Tools açın
+═══════════════════════════════════════════════════════════════
+
+F12 düyməsini basın
+
+
+═══════════════════════════════════════════════════════════════
+ADDIM 3: Network tabına keçin
+═══════════════════════════════════════════════════════════════
+
+Yuxarıda "Network" tabına klikləyin
+
+
+═══════════════════════════════════════════════════════════════
+ADDIM 4: Səhifədə bir şey edin
+═══════════════════════════════════════════════════════════════
+
+Məsələn:
+- Pleylistinizi açın
+- Və ya səhifəni yeniləyin (Ctrl+R)
+- Və ya bir mahnıya klikləyin
+
+Network tabında REQUEST-LƏR görünəcək
+
+
+═══════════════════════════════════════════════════════════════
+ADDIM 5: Request tapın
+═══════════════════════════════════════════════════════════════
+
+Network siyahısında bu adlardan BİRİNİ tapın:
+
+  - account
+  - status  
+  - feed
+  - init
+  - playlists
+
+Və ya sadəcə HƏR HANSI request seçin (hansı olursa-olsun)
+
+
+═══════════════════════════════════════════════════════════════
+ADDIM 6: Request-ə SAĞ KLİK
+═══════════════════════════════════════════════════════════════
+
+Request-in ADINA sağ klik edin (siçanın sağ düyməsi)
+
+Menyu açılacaq
+
+
+═══════════════════════════════════════════════════════════════
+ADDIM 7: Copy as cURL seçin
+═══════════════════════════════════════════════════════════════
+
+Menyuda:
+
+Chrome/Edge:
+  Copy → Copy as cURL (bash)
+
+Firefox:
+  Copy → Copy as cURL (POSIX)
+
+Klik edin!
+
+cURL əmri clipboard-a kopyalanacaq
+
+
+═══════════════════════════════════════════════════════════════
+ADDIM 8: Skripti işə salın
+═══════════════════════════════════════════════════════════════
+
+PowerShell-də:
+
+cd c:\Users\Tuncay\Desktop\Apple_music
+python get_token_simple.py
+
+
+═══════════════════════════════════════════════════════════════
+ADDIM 9: cURL-u yapışdırın
+═══════════════════════════════════════════════════════════════
+
+Skript soruşacaq:
+  "cURL əmrini yapışdırın:"
+
+Ctrl+V basın (clipboard-dan yapışacaq)
+
+Enter basın
+
+
+═══════════════════════════════════════════════════════════════
+NƏTİCƏ
+═══════════════════════════════════════════════════════════════
+
+Skript:
+✅ cURL-dan token çıxaracaq
+✅ Token-ı test edəcək
+✅ .env faylını yeniləyəcək
+
+
+═══════════════════════════════════════════════════════════════
+ALTERNATIV: Microsoft Store versiyasından
+═══════════════════════════════════════════════════════════════
+
+Əgər cURL çətin gəlirsə, bu skripti işə salın:
+
+cd c:\Users\Tuncay\Desktop\Apple_music
+.\find_token_microsoft_store.ps1
+
+Bu skript Microsoft Store Yandex Music qovluğunda
+avtomatik config.json tapıb token-ı oxuyacaq!
+
+
+═══════════════════════════════════════════════════════════════
+QEYD
+═══════════════════════════════════════════════════════════════
+
+cURL əmri UZUN olacaq (bir neçə sətr).
+Bu normaldır! Bütünlüklə kopyalayın və yapışdırın.
+
+Məsələn:
+curl 'https://music.yandex.ru/...' \
+  -H 'Authorization: OAuth TOKEN...' \
+  -H 'Cookie: ...' \
+  ...
+
+
+═══════════════════════════════════════════════════════════════

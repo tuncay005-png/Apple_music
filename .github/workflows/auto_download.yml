@@ -117,6 +117,7 @@ jobs:
     
     - name: 💾 History faylını repository-yə commit et
       if: always()
+      continue-on-error: true
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
@@ -128,8 +129,8 @@ jobs:
             echo "ℹ History faylında dəyişiklik yoxdur"
           else
             git commit -m "🤖 History yeniləndi: $(date +'%Y-%m-%d %H:%M:%S')"
-            git push
-            echo "✓ History faylı repository-yə əlavə edildi"
+            git push || echo "⚠️ Push xətası (normal, artifacts-də saxlanılır)"
+            echo "✓ History artifacts-də saxlanıldı"
           fi
         fi
     
