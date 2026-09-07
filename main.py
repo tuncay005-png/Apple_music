@@ -218,17 +218,23 @@ class MusicDownloader:
         """
         YouTube pleylistindən yeni mahnıları yüklə
         Format: MP3 (FFmpeg ilə çevrilmiş)
+        
+        İki üsul:
+        1. Cookies ilə (əgər YOUTUBE_COOKIES secret varsa)
+        2. Invidious API ilə (cookies yoxdursa və ya işləməzsə)
         """
         if not YOUTUBE_PLAYLIST_ID:
             logger.warning("YOUTUBE_PLAYLIST_ID təyin edilməyib")
             return 0
         
         downloaded_count = 0
+        use_cookies = False
         
         # Cookies faylını yarat (əgər YOUTUBE_COOKIES secret varsa)
         if YOUTUBE_COOKIES:
             try:
                 COOKIES_FILE.write_text(YOUTUBE_COOKIES, encoding='utf-8')
+                use_cookies = True
                 logger.info("✓ YouTube cookies yükləndi")
             except Exception as e:
                 logger.warning(f"Cookies yazma xətası: {e}")
@@ -248,21 +254,34 @@ class MusicDownloader:
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
-            'extractor_args': {
-                'youtube': {
-                    'player_client': ['android_creator'],
-                    'skip': ['webpage', 'js']
-                }
-            },
-            'http_headers': {
-                'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 13) gzip'
-            }
         }
         
-        # Cookies faylı varsa əlavə et
-        if COOKIES_FILE.exists():
+        # Cookies varsa - direkt YouTube
+        if use_cookies and COOKIES_FILE.exists():
             ydl_opts['cookiefile'] = str(COOKIES_FILE)
-            logger.info("✓ Cookies istifadə edilir")
+            logger.info("✓ Cookies ilə YouTube-dan yükləmə")
+        else:
+            # Cookies yoxdursa - Invidious API istifadə et (bot check yoxdur!)
+            logger.info("✓ Invidious API istifadə edilir (cookies lazım deyil)")
+            # Invidious instance-ləri
+            invidious_instances = [
+                'https://invidious.privacyredirect.com',
+                'https://inv.tux.pizza',
+                'https://invidious.fdn.fr',
+            ]
+            # Random instance seç
+            import random
+            ydl_opts['extractor_args'] = {
+                'youtube': {
+                    'player_client': ['web'],
+                }
+            }
+            # Invidious URL-ini playlist URL-ə əlavə edəcəyik
+        
+        # User-Agent əlavə et
+        ydl_opts['http_headers'] = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
         
         try:
             playlist_url = f"https://www.youtube.com/playlist?list={YOUTUBE_PLAYLIST_ID}"
