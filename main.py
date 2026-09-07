@@ -225,19 +225,23 @@ class MusicDownloader:
         
         # yt-dlp konfiqurasiyası
         ydl_opts = {
-            'format': 'bestaudio/best',  # Ən yaxşı mö vcud audio
+            'format': 'bestaudio/best',
             'outtmpl': str(DOWNLOAD_DIR / '%(title)s.%(ext)s'),
             'quiet': False,
             'no_warnings': False,
-            'extract_flat': 'in_playlist',  # Əvvəlcə siyahını götür
+            'extract_flat': 'in_playlist',
             'ignoreerrors': True,
             'writethumbnail': False,
             'embedthumbnail': False,
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['android'],
+                    'player_client': ['android_creator'],
+                    'skip': ['webpage', 'js']
                 }
             },
+            'http_headers': {
+                'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 13) gzip'
+            }
         }
         
         try:
@@ -273,13 +277,13 @@ class MusicDownloader:
                         logger.info(f"⬇ Yüklənir: {title}")
                         
                         # Yükləmədən əvvəl downloads qovluğundakı faylların sayı
-                        files_before = set(DOWNLOAD_DIR.glob('*.m4a'))
+                        files_before = set(DOWNLOAD_DIR.glob('*'))
                         
                         # Yüklə
                         result = ydl.download([video_url])
                         
                         # Yükləmədən sonra yeni faylları yoxla
-                        files_after = set(DOWNLOAD_DIR.glob('*.m4a'))
+                        files_after = set(DOWNLOAD_DIR.glob('*'))
                         new_files = files_after - files_before
                         
                         # Əgər yeni fayl yaranıbsa, uğurlu sayılır
