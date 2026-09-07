@@ -121,16 +121,16 @@ jobs:
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
+        git config advice.addIgnoredFile false
         
         if [ -f "history.txt" ]; then
-          git add history.txt
+          git add history.txt 2>/dev/null || true
           
           if git diff --staged --quiet; then
             echo "ℹ History faylında dəyişiklik yoxdur"
           else
-            git commit -m "🤖 History yeniləndi: $(date +'%Y-%m-%d %H:%M:%S')"
-            git push || echo "⚠️ Push xətası (normal, artifacts-də saxlanılır)"
-            echo "✓ History artifacts-də saxlanıldı"
+            git commit -m "🤖 History yeniləndi: $(date +'%Y-%m-%d %H:%M:%S')" 2>/dev/null || true
+            git push 2>/dev/null || echo "ℹ History artifacts-də saxlanılır"
           fi
         fi
     
