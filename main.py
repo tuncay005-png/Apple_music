@@ -44,7 +44,8 @@ load_dotenv()
 YANDEX_TOKEN = os.getenv('YANDEX_TOKEN')
 YANDEX_PLAYLIST_ID = os.getenv('YANDEX_PLAYLIST_ID')
 YOUTUBE_PLAYLIST_ID = os.getenv('YOUTUBE_PLAYLIST_ID')
-YOUTUBE_COOKIES = os.getenv('YOUTUBE_COOKIES')  # Cookies məzmunu
+YOUTUBE_COOKIES = os.getenv('YOUTUBE_COOKIES')  # Cookies (optional)
+YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')  # YouTube API v3 Key (RECOMMENDED!)
 DOWNLOAD_DIR = Path('downloads')
 HISTORY_FILE = Path('history.txt')
 COOKIES_FILE = Path('youtube_cookies.txt')  # Müvəqqəti cookies faylı
@@ -215,30 +216,107 @@ class MusicDownloader:
         
         return downloaded_count
     
+    def _download_youtube_with_api(self, api_key: str) -> int:
+        """
+        YouTube Data API v3 ilə yüklə (BOT CHECK YOXDUR!)
+        """
+        downloaded_count = 0
+        
+        try:
+            # Playlist video ID-lərini al
+            import urllib.request
+            import urllib.parse
+            
+            playlist_url = f"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId={YOUTUBE_PLAYLIST_ID}&key={api_key}"
+            
+            with urllib.request.urlopen(playlist_url) as response:
+                data = json.loads(response.read().decode())
+            
+            videos = data.get('items', [])
+            logger.info(f"📋 YouTube API: {len(videos)} video tapıldı")
+            
+            # yt-dlp konfiqurasiyası (API ilə bot check yoxdur!)
+            ydl_opts = {
+                'format': 'bestaudio/best',
+                'outtmpl': str(DOWNLOAD_DIR / '%(title)s.%(ext)s'),
+                'quiet': True,
+                'no_warnings': True,
+                'ignoreerrors': True,
+                'postprocessors': [{
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'mp3',
+                    'preferredquality': '5',
+                }],
+            }
+            
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                for item in videos:
+                    video_id = item['snippet']['resourceId']['videoId']
+                    title = item['snippet']['title']
+                    track_id = f"youtube_{video_id}"
+                    
+                    if track_id in self.history:
+                        logger.debug(f"⊘ Artıq mövcuddur: {title}")
+                        continue
+                    
+                    try:
+                        logger.info(f"⬇ Yüklənir: {title}")
+                        
+                        files_before = set(DOWNLOAD_DIR.glob('*'))
+                        video_url = f"https://www.youtube.com/watch?v={video_id}"
+                        result = ydl.download([video_url])
+                        files_after = set(DOWNLOAD_DIR.glob('*'))
+                        new_files = files_after - files_before
+                        
+                        if result == 0 and len(new_files) > 0:
+                            self._save_to_history(track_id)
+                            downloaded_count += 1
+                            logger.info(f"✓ Uğurla yükləndi: {list(new_files)[0].name}")
+                        else:
+                            logger.error(f"✗ Fayl yaradılmadı: {title}")
+                    
+                    except Exception as e:
+                        logger.error(f"✗ Xəta ({title}): {e}")
+                        continue
+            
+        except Exception as e:
+            logger.error(f"✗ YouTube API xətası: {e}")
+            raise  # Cookies-ə fallback üçün
+        
+        return downloaded_count
+    
     def download_from_youtube(self) -> int:
         """
         YouTube pleylistindən yeni mahnıları yüklə
-        Format: MP3 (FFmpeg ilə çevrilmiş)
         
-        İki üsul:
-        1. Cookies ilə (əgər YOUTUBE_COOKIES secret varsa)
-        2. Invidious API ilə (cookies yoxdursa və ya işləməzsə)
+        3 Üsul (prioritet sırası):
+        1. YouTube Data API v3 (ən yaxşı - bot check yoxdur, cookies lazım deyil!)
+        2. Cookies ilə (cookies varsa)
+        3. Invidious API (fallback)
         """
         if not YOUTUBE_PLAYLIST_ID:
             logger.warning("YOUTUBE_PLAYLIST_ID təyin edilməyib")
             return 0
         
         downloaded_count = 0
-        use_cookies = False
         
-        # Cookies faylını yarat (əgər YOUTUBE_COOKIES secret varsa)
+        # 1. YouTube API v3 istifadə et (ən yaxşı üsul!)
+        if YOUTUBE_API_KEY:
+            logger.info("✓ YouTube Data API v3 istifadə edilir (BOT CHECK YOXDUR!)")
+            try:
+                return self._download_youtube_with_api(YOUTUBE_API_KEY)
+            except Exception as e:
+                logger.warning(f"API xətası, cookies-ə keçid: {e}")
+        
+        # 2. Cookies istifadə et
+        use_cookies = False
         if YOUTUBE_COOKIES:
             try:
                 COOKIES_FILE.write_text(YOUTUBE_COOKIES, encoding='utf-8')
                 use_cookies = True
-                logger.info("✓ YouTube cookies yükləndi")
+                logger.info("✓ Cookies istifadə edilir")
             except Exception as e:
-                logger.warning(f"Cookies yazma xətası: {e}")
+                logger.warning(f"Cookies xətası: {e}")
         
         # yt-dlp konfiqurasiyası
         ydl_opts = {
@@ -253,33 +331,17 @@ class MusicDownloader:
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
-                'preferredquality': '5',  # YouTube orijinal keyfiyyət (128-256kbps)
+                'preferredquality': '5',  # YouTube orijinal keyfiyyət
             }],
         }
         
-        # Cookies varsa - direkt YouTube
+        # Cookies varsa əlavə et
         if use_cookies and COOKIES_FILE.exists():
             ydl_opts['cookiefile'] = str(COOKIES_FILE)
-            logger.info("✓ Cookies ilə YouTube-dan yükləmə")
         else:
-            # Cookies yoxdursa - Invidious API istifadə et (bot check yoxdur!)
-            logger.info("✓ Invidious API istifadə edilir (cookies lazım deyil)")
-            # Invidious instance-ləri
-            invidious_instances = [
-                'https://invidious.privacyredirect.com',
-                'https://inv.tux.pizza',
-                'https://invidious.fdn.fr',
-            ]
-            # Random instance seç
-            import random
-            ydl_opts['extractor_args'] = {
-                'youtube': {
-                    'player_client': ['web'],
-                }
-            }
-            # Invidious URL-ini playlist URL-ə əlavə edəcəyik
+            # 3. Invidious fallback
+            logger.info("✓ Invidious API fallback")
         
-        # User-Agent əlavə et
         ydl_opts['http_headers'] = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
