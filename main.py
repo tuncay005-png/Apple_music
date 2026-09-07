@@ -163,7 +163,11 @@ class MusicDownloader:
                     logger.info(f"⬇ Yüklənir: {artists} - {title}")
                     
                     # Ən yüksək keyfiyyətdə yüklə (xam M4A/AAC)
-                    track.download(str(output_file), codec='aac', bitrate_in_kbps=320)
+                    try:
+                        track.download(str(output_file), codec='aac', bitrate_in_kbps=320)
+                    except:
+                        # Əgər 320kbps yoxdursa, mövcud ən yüksək keyfiyyət
+                        track.download(str(output_file), codec='aac')
                     
                     # Qapaq şəklini əldə et (1000x1000)
                     if track.cover_uri:
