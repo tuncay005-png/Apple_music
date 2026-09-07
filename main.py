@@ -162,19 +162,31 @@ class MusicDownloader:
                     
                     logger.info(f"⬇ Yüklənir: {artists} - {title}")
                     
-                    # Ən yüksək keyfiyyətdə yüklə (xam M4A/AAC)
+                    # Yükləməni cəhd et (bitrate parametrsiz)
+                    download_success = False
+                    
                     try:
-                        track.download(str(output_file), codec='aac', bitrate_in_kbps=320)
-                    except:
-                        # Əgər 320kbps yoxdursa, mövcud ən yüksək keyfiyyət
+                        # İlk cəhd: sadəcə codec ilə (bitrate yox)
+                        track.download(str(output_file), codec='aac')
+                        download_success = output_file.exists() and output_file.stat().st_size > 0
+                    except Exception as e1:
+                        logger.warning(f"AAC yükləmə xətası: {e1}")
+                        
                         try:
-                            track.download(str(output_file), codec='aac')
-                        except Exception as dl_error:
-                            logger.error(f"✗ Yükləmə xətası: {dl_error}")
-                            continue
+                            # İkinci cəhd: mp3 formatı (AAC işləməzsə)
+                            output_file_mp3 = output_file.with_suffix('.mp3')
+                            track.download(str(output_file_mp3), codec='mp3')
+                            
+                            if output_file_mp3.exists() and output_file_mp3.stat().st_size > 0:
+                                # MP3-ü saxla (M4A-ya çevirməyə ehtiyac yox)
+                                logger.info(f"✓ MP3 formatında yükləndi")
+                                output_file = output_file_mp3
+                                download_success = True
+                        except Exception as e2:
+                            logger.error(f"✗ Yükləmə xətası: {e2}")
                     
                     # Faylın yarandığını yoxla
-                    if not output_file.exists():
+                    if not download_success:
                         logger.error(f"✗ Fayl yaradılmadı: {output_file.name}")
                         continue
                     
@@ -213,18 +225,19 @@ class MusicDownloader:
         
         # yt-dlp konfiqurasiyası
         ydl_opts = {
-            'format': 'bestaudio[ext=m4a]/bestaudio',  # Xam M4A/AAC formatı
+            'format': 'bestaudio/best',  # Ən yaxşı mö vcud audio
             'outtmpl': str(DOWNLOAD_DIR / '%(title)s.%(ext)s'),
             'quiet': False,
             'no_warnings': False,
             'extract_flat': 'in_playlist',  # Əvvəlcə siyahını götür
             'ignoreerrors': True,
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'm4a',
-            }],
-            'writethumbnail': False,  # Qapaq şəkli YÜKLƏNMƏZ
-            'embedthumbnail': False,  # Qapaq şəkli EMBED OLUNMAZ
+            'writethumbnail': False,
+            'embedthumbnail': False,
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android'],
+                }
+            },
         }
         
         try:
