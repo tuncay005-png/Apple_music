@@ -170,24 +170,16 @@ class MusicDownloader:
                     
                     logger.info(f"⬇ Yüklənir: {artists} - {title}")
                     
-                    # Yükləməni cəhd et - M4A format, 256kbps AAC
+                    # Yükləməni cəhd et - M4A format
                     download_success = False
                     
                     try:
-                        # M4A/AAC formatında yüklə (256kbps)
-                        track.download(str(output_file), codec='aac', bitrate_in_kbps=256)
+                        # M4A/AAC formatında yüklə (default bitrate)
+                        track.download(str(output_file), codec='aac')
                         download_success = output_file.exists() and output_file.stat().st_size > 0
-                        logger.info(f"✓ M4A 256kbps formatında yükləndi")
+                        logger.info(f"✓ M4A formatında yükləndi")
                     except Exception as e1:
-                        logger.warning(f"M4A 256kbps xətası: {e1}")
-                        
-                        try:
-                            # Əgər 256 yoxdursa, mövcud AAC
-                            track.download(str(output_file), codec='aac')
-                            download_success = output_file.exists() and output_file.stat().st_size > 0
-                            logger.info(f"✓ M4A formatında yükləndi")
-                        except Exception as e2:
-                            logger.error(f"✗ Yükləmə xətası: {e2}")
+                        logger.error(f"✗ Yükləmə xətası: {e1}")
                     
                     # Faylın yarandığını yoxla
                     if not download_success:
@@ -313,11 +305,14 @@ class MusicDownloader:
         
         # 1. YouTube API v3 istifadə et (ən yaxşı üsul!)
         if YOUTUBE_API_KEY:
+            logger.info(f"✓ YouTube Data API v3 KEY tapıldı: {YOUTUBE_API_KEY[:20]}...")
             logger.info("✓ YouTube Data API v3 istifadə edilir (BOT CHECK YOXDUR!)")
             try:
                 return self._download_youtube_with_api(YOUTUBE_API_KEY)
             except Exception as e:
                 logger.warning(f"API xətası, cookies-ə keçid: {e}")
+        else:
+            logger.warning("⚠ YOUTUBE_API_KEY tapılmadı! Invidious fallback...")
         
         # 2. Cookies istifadə et
         use_cookies = False
