@@ -165,21 +165,19 @@ class MusicDownloader:
                     
                     # Təmiz fayl adı
                     safe_filename = f"{artists} - {title}".replace('/', '-').replace('\\', '-')
-                    safe_filename = "".join(c for c in safe_filename if c.isalnum() or c in (' ', '-', '_')).strip()
+                    safe_filename = "".join(c for c in safe_filename if c.isalnum() or c in (' ', '-', '_', '.')).strip()
                     output_file = DOWNLOAD_DIR / f"{safe_filename}.m4a"
                     
                     logger.info(f"⬇ Yüklənir: {artists} - {title}")
                     
-                    # Yükləməni cəhd et - MP3 format (M4A işləmir)
+                    # M4A formatında yüklə (bitrate qeyd etmədən - Yandex öz default-unu verəcək)
                     download_success = False
-                    output_file_mp3 = output_file.with_suffix('.mp3')
                     
                     try:
-                        # MP3 formatında yüklə
-                        track.download(str(output_file_mp3), codec='mp3')
-                        download_success = output_file_mp3.exists() and output_file_mp3.stat().st_size > 0
-                        logger.info(f"✓ MP3 formatında yükləndi")
-                        output_file = output_file_mp3
+                        # M4A/AAC download
+                        track.download(str(output_file))
+                        download_success = output_file.exists() and output_file.stat().st_size > 0
+                        logger.info(f"✓ M4A formatında yükləndi")
                     except Exception as e1:
                         logger.error(f"✗ Yükləmə xətası: {e1}")
                     

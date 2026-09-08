@@ -54,6 +54,7 @@ jobs:
         YANDEX_TOKEN: ${{ secrets.YANDEX_TOKEN }}
         YANDEX_PLAYLIST_ID: ${{ secrets.YANDEX_PLAYLIST_ID }}
         YOUTUBE_PLAYLIST_ID: ${{ secrets.YOUTUBE_PLAYLIST_ID }}
+        YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
       run: |
         echo "🎵 Musiqi yükləmə prosesi başlayır..."
         python main.py
