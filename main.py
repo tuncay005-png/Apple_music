@@ -219,8 +219,10 @@ class MusicDownloader:
     def _download_youtube_with_api(self, api_key: str) -> int:
         """
         YouTube Data API v3 ilə yüklə (BOT CHECK YOXDUR!)
+        Günlük limit: 5 mahnı (API quota qorumaq üçün)
         """
         downloaded_count = 0
+        DAILY_LIMIT = 5  # Gündə maksimum 5 mahnı
         
         try:
             # Playlist video ID-lərini al
@@ -233,7 +235,7 @@ class MusicDownloader:
                 data = json.loads(response.read().decode())
             
             videos = data.get('items', [])
-            logger.info(f"📋 YouTube API: {len(videos)} video tapıldı")
+            logger.info(f"📋 YouTube API: {len(videos)} video tapıldı (limit: {DAILY_LIMIT}/gün)")
             
             # yt-dlp konfiqurasiyası (API ilə bot check yoxdur!)
             ydl_opts = {
@@ -251,6 +253,11 @@ class MusicDownloader:
             
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 for item in videos:
+                    # Günlük limitə çatdımı?
+                    if downloaded_count >= DAILY_LIMIT:
+                        logger.info(f"⏸ Günlük limit ({DAILY_LIMIT} mahnı) doldu - sabah davam edəcək")
+                        break
+                    
                     video_id = item['snippet']['resourceId']['videoId']
                     title = item['snippet']['title']
                     track_id = f"youtube_{video_id}"
@@ -260,7 +267,7 @@ class MusicDownloader:
                         continue
                     
                     try:
-                        logger.info(f"⬇ Yüklənir: {title}")
+                        logger.info(f"⬇ Yüklənir ({downloaded_count+1}/{DAILY_LIMIT}): {title}")
                         
                         files_before = set(DOWNLOAD_DIR.glob('*'))
                         video_url = f"https://www.youtube.com/watch?v={video_id}"
@@ -278,6 +285,10 @@ class MusicDownloader:
                     except Exception as e:
                         logger.error(f"✗ Xəta ({title}): {e}")
                         continue
+            
+            if downloaded_count >= DAILY_LIMIT:
+                logger.info(f"📊 Bu gün: {downloaded_count}/{DAILY_LIMIT} mahnı yükləndi")
+                logger.info(f"📅 Qalan mahnılar sabah yüklənəcək")
             
         except Exception as e:
             logger.error(f"✗ YouTube API xətası: {e}")
