@@ -170,14 +170,16 @@ class MusicDownloader:
                     
                     logger.info(f"⬇ Yüklənir: {artists} - {title}")
                     
-                    # Yükləməni cəhd et - M4A format
+                    # Yükləməni cəhd et - MP3 format (M4A işləmir)
                     download_success = False
+                    output_file_mp3 = output_file.with_suffix('.mp3')
                     
                     try:
-                        # M4A/AAC formatında yüklə (default bitrate)
-                        track.download(str(output_file), codec='aac')
-                        download_success = output_file.exists() and output_file.stat().st_size > 0
-                        logger.info(f"✓ M4A formatında yükləndi")
+                        # MP3 formatında yüklə
+                        track.download(str(output_file_mp3), codec='mp3')
+                        download_success = output_file_mp3.exists() and output_file_mp3.stat().st_size > 0
+                        logger.info(f"✓ MP3 formatında yükləndi")
+                        output_file = output_file_mp3
                     except Exception as e1:
                         logger.error(f"✗ Yükləmə xətası: {e1}")
                     
